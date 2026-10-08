@@ -127,10 +127,40 @@ if [[ -n "$CA_CERT" && "$BASE" == "$SERVER"* ]]; then
 fi
 
 info "Agent yuklab olinyapti ($ARCH)..."
-if ! curl "${BIN_OPTS[@]}" -o "$TMP/qalqon-agent" \
-     "$BASE/qalqon-agent-linux-$ARCH"; then
-  die "binar yuklab olinmadi: $BASE/qalqon-agent-linux-$ARCH
-    Manbada shu arxitektura uchun binar borligini tekshiring."
+# curl ning chiqish kodini aniq ushlaymiz: sabablar butunlay har xil va
+# umumiy "yuklab olinmadi" xabari foydalanuvchini noto'g'ri yo'nalishga
+# yuboradi (masalan sertifikat muammosida binarni qidirishga).
+set +e
+curl "${BIN_OPTS[@]}" -o "$TMP/qalqon-agent" "$BASE/qalqon-agent-linux-$ARCH"
+rc=$?
+set -e
+if [[ $rc -ne 0 ]]; then
+  URL="$BASE/qalqon-agent-linux-$ARCH"
+  case $rc in
+    60|51|77)
+      die "server sertifikati bu manzilga mos emas: $URL
+
+    Sertifikat $SERVER uchun yasalmagan (SAN ro'yxatida bu IP/domen yo'q).
+    Markaziy serverda tekshiring:
+      openssl x509 -in certs/server.crt -noout -ext subjectAltName
+
+    To'g'ri manzil bilan qayta yasang (CA o'zgarmaydi, agentlarga tegish shart emas):
+      ./deploy/gen-cert.sh <SHU-MANZIL>
+      docker compose --profile tls restart nginx" ;;
+    22)
+      die "binar topilmadi (HTTP xatosi): $URL
+
+    Markaziy serverda binar bormi:
+      curl -kI $BASE/qalqon-agent-linux-$ARCH
+    Yo'q bo'lsa:  docker compose up -d --build" ;;
+    6|7|28)
+      die "manbaga ulanib bo'lmadi: $URL
+
+    Tarmoq yoki firewall to'syapti. Shu serverdan tekshiring:
+      curl -kI $SERVER/healthz" ;;
+    *)
+      die "binar yuklab olinmadi (curl kodi $rc): $URL" ;;
+  esac
 fi
 
 # Hash tekshiruvi — manba beradigan bo'lsa
