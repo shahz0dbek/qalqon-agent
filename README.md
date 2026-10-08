@@ -8,35 +8,24 @@ kerak emas — binar statik (CGO yo'q), hech qanday kutubxonaga bog'lanmagan.
 
 Joriy versiya: **0.1.0**
 
-> **Diqqat: bu ombor hozir `private`.** Shuning uchun quyidagi
-> `raw.githubusercontent.com` havolalari **anonim ishlamaydi** (404 qaytaradi).
-> Ikki yo'l bor:
->
-> 1. **Markaziy serverdan o'rnatish** (tavsiya) — pastdagi birinchi usul.
->    GitHub umuman kerak emas, ombor private qolaveradi.
-> 2. **Omborni `public` qilish** — GitHub → Settings → General → Danger Zone →
->    Change visibility. Shundan keyin GitHub havolalari ham ishlaydi.
-
 ---
 
 ## Tez o'rnatish
 
-### Usul 1 — markaziy serverdan (private omborda ham ishlaydi)
+```bash
+curl -fsSL https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/install.sh \
+  | sudo bash -s -- --server https://MARKAZIY-SERVER --token <TOKEN>
+```
 
-Binarlar markaziy Qalqon serverining `/static/` papkasida ham turadi va u
-autentifikatsiyasiz beriladi:
+Binarlar markaziy Qalqon serverining `/static/` papkasida ham turadi — GitHub
+ga chiqish yo'q bo'lgan yopiq tarmoqda shu yo'ldan foydalanish mumkin:
 
 ```bash
 curl -fsSL https://MARKAZIY-SERVER/static/install-agent.sh \
   | sudo bash -s -- --server https://MARKAZIY-SERVER --token <TOKEN>
 ```
 
-### Usul 2 — shu ombordan (ombor `public` bo'lsa)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/install.sh \
-  | sudo bash -s -- --server https://MARKAZIY-SERVER --token <TOKEN>
-```
+Ikkala manbadagi binarlar **bayt-ma-bayt bir xil** (qurilish takrorlanadigan).
 
 Skript o'zi: arxitekturani aniqlaydi → mos binarni yuklaydi → sha256 ni
 tekshiradi → `/usr/local/bin/qalqon-agent` ga o'rnatadi → serverga ro'yxatdan
@@ -111,11 +100,8 @@ shuning uchun NAT yoki qattiq firewall ortidagi serverlar ham boshqariladi.
 
 ```bash
 ARCH=amd64        # uname -m ga qarab yuqoridagi jadvaldan
-
-# Ombor private bo'lsa — markaziy serverdan:
-BASE=https://MARKAZIY-SERVER/static
-# Ombor public bo'lsa — GitHub dan:
-# BASE=https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/bin
+BASE=https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/bin
+# yoki yopiq tarmoqda:  BASE=https://MARKAZIY-SERVER/static
 
 curl -fsSLO $BASE/qalqon-agent-linux-$ARCH
 curl -fsSLO $BASE/qalqon-agent-linux-$ARCH.sha256
@@ -143,8 +129,7 @@ curl -fsSLO $BASE/SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
 ```
 
-Ombor private bo'lsa fayllarni brauzerda (GitHub ga kirgan holda) yoki
-`git clone git@github.com:shahz0dbek/qalqon-agent.git` bilan olish mumkin.
+Barcha fayllarni birdan olish: `git clone https://github.com/shahz0dbek/qalqon-agent.git`
 
 ---
 
@@ -178,9 +163,8 @@ avval UI dan qoidalarni olib tashlang.
 
 ## Binarlar qanday qurilgan
 
-Asosiy ombordagi [`agent/build.sh`](https://github.com/shahz0dbek/Qalqon/blob/main/agent/build.sh)
-orqali, [`agent/targets.txt`](https://github.com/shahz0dbek/Qalqon/blob/main/agent/targets.txt)
-dagi ro'yxat bo'yicha:
+Asosiy Qalqon omborining `agent/build.sh` skripti orqali, `agent/targets.txt`
+dagi ro'yxat bo'yicha (asosiy ombor private — havolalar hammaga ochiq emas):
 
 ```
 CGO_ENABLED=0 GOOS=linux GOARCH=<arch> go build -trimpath -ldflags "-s -w -X main.Version=<v>"
@@ -195,5 +179,5 @@ Qaysi commit'dan qurilgani: [`bin/BUILDINFO`](bin/BUILDINFO).
 
 Bu omborni yangilash: `./deploy/publish-agent.sh ../qalqon-agent <versiya>`
 
-Manba kodi, server qismi va to'liq hujjatlar:
-**https://github.com/shahz0dbek/Qalqon**
+Manba kodi, server qismi va to'liq hujjatlar — asosiy ombor:
+**https://github.com/shahz0dbek/Qalqon** (private)
