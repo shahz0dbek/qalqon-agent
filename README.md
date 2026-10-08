@@ -186,6 +186,13 @@ dagi ro'yxat bo'yicha:
 CGO_ENABLED=0 GOOS=linux GOARCH=<arch> go build -trimpath -ldflags "-s -w -X main.Version=<v>"
 ```
 
+Qurilish **takrorlanadigan**: Go versiyasi `server/Dockerfile` da aniq
+mahkamlangan va `-buildvcs=false` qo'yilgan, shuning uchun bir xil manbadan
+har doim bir xil binar chiqadi. Shu sababli bu ombordagi fayllar markaziy
+serverning `/static/` papkasidagi fayllar bilan **bayt-ma-bayt bir xil**.
+
+Qaysi commit'dan qurilgani: [`bin/BUILDINFO`](bin/BUILDINFO).
+
 Bu omborni yangilash: `./deploy/publish-agent.sh ../qalqon-agent <versiya>`
 
 Manba kodi, server qismi va to'liq hujjatlar:
