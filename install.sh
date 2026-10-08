@@ -45,6 +45,7 @@ done
 
 [[ $EUID -eq 0 ]] || die "root huquqi kerak (sudo bilan ishga tushiring)"
 [[ -n "$SERVER" ]] || die "--server majburiy"
+SERVER="${SERVER%/}"
 [[ -n "$TOKEN" ]] || die "--token majburiy"
 
 # --- OS va arxitekturani aniqlash ---
@@ -108,8 +109,6 @@ if [[ -n "$CA_CERT" ]]; then
   fi
   install -m 0644 -o root -g root "$TMP/ca.crt" "$CA_DEST"
   ok "CA o'rnatildi: $CA_DEST (sha256 $(sha256sum "$CA_DEST" | cut -c1-16)...)"
-  # Endi binarni ham shu CA bilan tekshirib olamiz
-  CURL_OPTS+=(--cacert "$CA_DEST")
 fi
 
 # --- Agent binarini yuklab olish ---
@@ -118,15 +117,24 @@ fi
 BASE="${BINARY_BASE:-$SERVER/static}"
 BASE="${BASE%/}"
 
+# DIQQAT: `curl --cacert` standart CA ro'yxatini ALMASHTIRADI, unga qo'shmaydi.
+# Shuning uchun uni faqat markaziy serverga murojaatda ishlatamiz. Binar GitHub
+# kabi ommaviy manbadan kelsa, o'sha yerda tizimning oddiy CA ro'yxati kerak —
+# aks holda yuklash "certificate verify failed" bilan yiqiladi.
+BIN_OPTS=("${CURL_OPTS[@]}")
+if [[ -n "$CA_CERT" && "$BASE" == "$SERVER"* ]]; then
+  BIN_OPTS+=(--cacert "$CA_DEST")
+fi
+
 info "Agent yuklab olinyapti ($ARCH)..."
-if ! curl "${CURL_OPTS[@]}" -o "$TMP/qalqon-agent" \
+if ! curl "${BIN_OPTS[@]}" -o "$TMP/qalqon-agent" \
      "$BASE/qalqon-agent-linux-$ARCH"; then
   die "binar yuklab olinmadi: $BASE/qalqon-agent-linux-$ARCH
     Manbada shu arxitektura uchun binar borligini tekshiring."
 fi
 
 # Hash tekshiruvi — manba beradigan bo'lsa
-if curl "${CURL_OPTS[@]}" -o "$TMP/sha256" \
+if curl "${BIN_OPTS[@]}" -o "$TMP/sha256" \
      "$BASE/qalqon-agent-linux-$ARCH.sha256" 2>/dev/null; then
   EXPECTED="$(awk '{print $1}' "$TMP/sha256")"
   ACTUAL="$(sha256sum "$TMP/qalqon-agent" | awk '{print $1}')"
