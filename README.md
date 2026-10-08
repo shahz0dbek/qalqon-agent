@@ -8,9 +8,30 @@ kerak emas — binar statik (CGO yo'q), hech qanday kutubxonaga bog'lanmagan.
 
 Joriy versiya: **0.1.0**
 
+> **Diqqat: bu ombor hozir `private`.** Shuning uchun quyidagi
+> `raw.githubusercontent.com` havolalari **anonim ishlamaydi** (404 qaytaradi).
+> Ikki yo'l bor:
+>
+> 1. **Markaziy serverdan o'rnatish** (tavsiya) — pastdagi birinchi usul.
+>    GitHub umuman kerak emas, ombor private qolaveradi.
+> 2. **Omborni `public` qilish** — GitHub → Settings → General → Danger Zone →
+>    Change visibility. Shundan keyin GitHub havolalari ham ishlaydi.
+
 ---
 
 ## Tez o'rnatish
+
+### Usul 1 — markaziy serverdan (private omborda ham ishlaydi)
+
+Binarlar markaziy Qalqon serverining `/static/` papkasida ham turadi va u
+autentifikatsiyasiz beriladi:
+
+```bash
+curl -fsSL https://MARKAZIY-SERVER/static/install-agent.sh \
+  | sudo bash -s -- --server https://MARKAZIY-SERVER --token <TOKEN>
+```
+
+### Usul 2 — shu ombordan (ombor `public` bo'lsa)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/install.sh \
@@ -34,10 +55,14 @@ Let's Encrypt ichki IP ga sertifikat bermaydi, shuning uchun LAN da o'z CA'ngiz
 ishlatiladi. CA ni skriptga bering (fayl yo'li yoki URL):
 
 ```bash
-curl -fsSLk https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/install.sh \
+curl -fsSLk https://192.168.1.50/static/install-agent.sh \
   | sudo bash -s -- --server https://192.168.1.50 --token <TOKEN> \
       --ca-cert https://192.168.1.50/static/ca.crt
 ```
+
+Birinchi `curl` da `-k` bor: skriptning o'zini olayotganda CA hali o'rnatilmagan.
+Skript ichida esa CA o'rnatilgandan keyin binar **tekshirilgan** ulanish bilan
+yuklanadi.
 
 CA `/etc/ssl/certs/qalqon-ca.crt` ga o'rnatiladi va agent faqat shu CA ga
 ishonadi. `--insecure` ham bor, lekin u sertifikatni umuman tekshirmaydi —
@@ -86,7 +111,11 @@ shuning uchun NAT yoki qattiq firewall ortidagi serverlar ham boshqariladi.
 
 ```bash
 ARCH=amd64        # uname -m ga qarab yuqoridagi jadvaldan
-BASE=https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/bin
+
+# Ombor private bo'lsa — markaziy serverdan:
+BASE=https://MARKAZIY-SERVER/static
+# Ombor public bo'lsa — GitHub dan:
+# BASE=https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/bin
 
 curl -fsSLO $BASE/qalqon-agent-linux-$ARCH
 curl -fsSLO $BASE/qalqon-agent-linux-$ARCH.sha256
@@ -110,9 +139,12 @@ systemd unit fayli `install.sh` ichida — qo'lda o'rnatsangiz undan nusxa oling
 ### Butunlikni tekshirish
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/shahz0dbek/qalqon-agent/main/bin/SHA256SUMS
+curl -fsSLO $BASE/SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
 ```
+
+Ombor private bo'lsa fayllarni brauzerda (GitHub ga kirgan holda) yoki
+`git clone git@github.com:shahz0dbek/qalqon-agent.git` bilan olish mumkin.
 
 ---
 
