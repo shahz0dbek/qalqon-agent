@@ -1,5 +1,5 @@
-version:   0.2.1
-qalqon:    0cf4d90b51bb34314119f10792b44ff8ed01cec5
+version:   0.2.2
+qalqon:    8b64ab3af03df593cecd327733c4ba9a0a814cf9
 toza:      ha
 go:        go1.22.12
-sana:      2026-10-21T05:24:46Z
+sana:      2026-10-21T06:25:31Z
