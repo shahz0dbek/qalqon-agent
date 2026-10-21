@@ -244,10 +244,25 @@ DKUNIT
 fi
 
 systemctl daemon-reload
-systemctl enable --now qalqon-agent
-ok "qalqon-agent yoqildi"
+systemctl enable qalqon-agent >/dev/null 2>&1
+
+# DIQQAT: `enable --now` faqat TO'XTAB TURGAN servisni ishga tushiradi.
+# Agent allaqachon ishlayotgan bo'lsa (qayta o'rnatish holati) u hech narsa
+# qilmasdi — yangi binar diskka yozilib, eski jarayon eski binar va eski CA
+# bilan ishlayverardi. Shuning uchun har doim `restart`.
+if systemctl is-active --quiet qalqon-agent; then
+  systemctl restart qalqon-agent
+  ok "qalqon-agent qayta ishga tushirildi (yangi binar va sozlamalar qo'llandi)"
+else
+  systemctl start qalqon-agent
+  ok "qalqon-agent yoqildi"
+fi
+
 if [[ -f /etc/systemd/system/qalqon-docker-fw.service ]]; then
-  systemctl enable qalqon-docker-fw >/dev/null 2>&1 && ok "qalqon-docker-fw yoqildi"
+  systemctl enable qalqon-docker-fw >/dev/null 2>&1
+  # oneshot: RemainAfterExit tufayli "active" bo'lib turadi, shuning uchun
+  # yangi binar bilan qayta bajarilishi uchun restart kerak
+  systemctl restart qalqon-docker-fw >/dev/null 2>&1 && ok "qalqon-docker-fw yoqildi"
 fi
 
 sleep 3
